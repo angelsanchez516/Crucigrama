@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Crucigrama SBOK · Cap. 11</title>
+<meta name="description" content="Crucigrama con vidas sobre la fase de Revisión y Retrospectiva (Guía SBOK, capítulo 11).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#C00000; --red-d:#800000; --ink:#1d1f1c; --muted:#62656b; --bg:#ffffff;
+  --soft:#f4f4f5; --line:#dedee2; --sel:#ffe1e1; --sel-strong:#ffc2c2; --ok:#1f7a3f; --ok-soft:#e7f4ec;
+  --cols:15; --rows:17; --cell:min(calc((100vw - 28px) / var(--cols)), 34px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit;cursor:pointer}
+.screen{min-height:100dvh}
+[hidden]{display:none!important}
+
+/* ---------- inicio ---------- */
+.start{display:flex;flex-direction:column;justify-content:center;max-width:560px;margin:0 auto;padding:32px 20px 40px}
+.kicker{color:var(--red);font-weight:700;letter-spacing:.14em;font-size:.78rem;text-transform:uppercase}
+.start h1{font-size:clamp(2rem,8vw,2.9rem);line-height:1.02;margin:.3em 0 .25em;font-weight:800;font-style:italic}
+.start p.lead{color:var(--muted);margin:0 0 22px;font-weight:300}
+.rules{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:10px}
+.rules li{display:flex;gap:12px;align-items:flex-start;background:var(--soft);border-radius:14px;padding:12px 14px;font-size:.92rem}
+.rules b{font-weight:600}
+.rules .ic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.9rem}
+label.lbl{font-weight:600;font-size:.9rem;display:block;margin-bottom:6px}
+.namerow{display:flex;gap:10px}
+.inp{flex:1;min-width:0;font:inherit;font-size:1.05rem;padding:13px 14px;border:2px solid var(--line);border-radius:12px;outline:none;background:#fff;color:var(--ink)}
+.inp:focus{border-color:var(--red)}
+.btn{border:0;border-radius:12px;padding:13px 18px;font-weight:600;background:var(--red);color:#fff;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.btn.dark{background:var(--ink)}
+.note{font-size:.8rem;color:var(--muted);margin-top:10px}
+.foot{margin-top:28px;font-size:.75rem;color:var(--muted)}
+
+/* ---------- juego ---------- */
+.top{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.topin{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 14px}
+.lives{display:flex;gap:4px}
+.heart{width:24px;height:24px;transition:transform .3s,opacity .3s}
+.heart.lost{opacity:.18;transform:scale(.8)}
+.stat{display:flex;flex-direction:column;line-height:1.05}
+.stat small{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.stat b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.timer.warn b{color:var(--red)}
+.spacer{flex:1}
+.who{font-size:.78rem;color:var(--muted);max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.layout{max-width:1100px;margin:0 auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media (min-width:900px){
+  :root{--cell:min(calc((100dvh - 110px) / var(--rows)), calc((100vw - 580px) / var(--cols)), 38px)}
+  .layout{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:28px}
+  .board{position:sticky;top:76px}
+  .right{position:sticky;top:76px;max-height:calc(100dvh - 90px);display:flex;flex-direction:column;gap:16px}
+  .right .panel{width:100%}
+  .side{overflow:auto;flex:1;min-height:0;padding-right:4px}
+}
+.board{display:flex;flex-direction:column;align-items:center;gap:14px}
+.right{display:flex;flex-direction:column;align-items:center;gap:18px}
+.right .side{align-self:stretch}
+.grid{display:grid;grid-template-columns:repeat(var(--cols),var(--cell));grid-auto-rows:var(--cell);gap:0;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.cell{position:relative;width:var(--cell);height:var(--cell)}
+.cell.on{background:#fff;border:1px solid #b9b9be;margin:-0.5px;cursor:pointer}
+.cell .num{position:absolute;top:1px;left:2px;font-size:calc(var(--cell) * .27);line-height:1;color:var(--muted);font-weight:500}
+.cell .ch{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:calc(var(--cell) * .56);padding-top:calc(var(--cell) * .08)}
+.cell.sel{background:var(--sel)}
+.cell.cur{background:var(--sel-strong)}
+.cell.solved{background:var(--ok-soft)}
+.cell.solved.sel{background:#d4ecdc}
+.cell .ch.typing{color:#9a9aa0}
+.cell .ch.hint{color:var(--red)}
+.cell.flash{animation:flash .6s}
+@keyframes flash{0%{background:#b9e6c8}100%{}}
+
+.panel{width:min(100%, 560px);background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+@media (max-width:899px){
+  .panel{position:sticky;bottom:8px;z-index:4}
+}
+.clabel{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.clabel .tag{background:var(--red);color:#fff;border-radius:999px;padding:2px 9px;letter-spacing:.04em}
+.ctext{margin:6px 0 12px;font-size:.98rem;line-height:1.35;min-height:2.6em}
+.arow{display:flex;gap:8px}
+.arow .inp{text-transform:uppercase;letter-spacing:.12em;font-weight:600;padding:11px 12px}
+.arow .inp::placeholder{text-transform:none;letter-spacing:0;font-weight:400}
+.arow .btn{padding:11px 14px}
+.acts{display:flex;gap:8px;margin-top:10px;align-items:center}
+.acts .btn{padding:8px 12px;font-size:.85rem}
+.msg{flex:1;text-align:right;font-size:.85rem;font-weight:600;min-height:1.2em}
+.msg.bad{color:var(--red)} .msg.good{color:var(--ok)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+.side h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.14em;color:var(--red);margin:4px 0 8px}
+.clues{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:4px}
+.clues button{width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px 10px;display:flex;gap:10px;font-size:.88rem;line-height:1.3;color:var(--ink)}
+.clues button:hover{background:var(--soft)}
+.clues button.active{background:var(--sel)}
+.clues button.done{color:#9a9aa0;text-decoration:line-through}
+.clues .n{flex:none;font-weight:700;min-width:1.4em}
+.clues .len{flex:none;color:var(--muted);font-size:.78rem;margin-left:auto}
+
+/* ---------- final ---------- */
+.end{max-width:560px;margin:0 auto;padding:40px 20px;text-align:center}
+.end .big{font-size:4.2rem;font-weight:800;line-height:1;color:var(--red);font-variant-numeric:tabular-nums}
+.end h2{font-size:1.6rem;margin:.2em 0 .3em}
+.breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}
+.breakdown div{background:var(--soft);border-radius:14px;padding:12px 6px}
+.breakdown b{display:block;font-size:1.3rem}
+.breakdown small{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}
+.rankbox{border:2px dashed var(--line);border-radius:14px;padding:14px;margin:6px 0 20px;font-weight:500}
+.rankbox.ok{border-color:var(--ok);color:var(--ok)}
+.endbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<!-- INICIO -->
+<section id="start" class="screen">
+  <div class="start">
+    <div class="kicker">Guía SBOK™ · Capítulo 11</div>
+    <h1>Crucigrama de Revisión y Retrospectiva</h1>
+    <p class="lead">14 palabras sobre lo que acabamos de exponer. ¿Quién llega primero a la isla?</p>
+    <ul class="rules">
+      <li><span class="ic">3</span><span>Tienes <b>3 vidas</b>. Cada respuesta incorrecta te quita una.</span></li>
+      <li><span class="ic">10</span><span>Tienes <b>10 minutos</b>. Cada palabra vale <b>100 puntos</b>; cada pista le resta 25.</span></li>
+      <li><span class="ic">★</span><span>Si completas todo: <b>+50 por vida</b> y bonus por el tiempo que sobre.</span></li>
+      <li><span class="ic">1</span><span>Para el ranking <b>solo cuenta tu primer intento</b>.</span></li>
+    </ul>
+    <label class="lbl" for="name">Tu nombre o el de tu equipo</label>
+    <form class="namerow" id="startForm" autocomplete="off">
+      <input class="inp" id="name" maxlength="20" placeholder="Ej.: Los Product Owners" required>
+      <button class="btn" id="startBtn" type="submit">Empezar</button>
+    </form>
+    <p class="note" id="resumeNote" hidden></p>
+    <p class="foot">Exposición de Camilo Amaya y Angel Sánchez · Ingeniería de Software · UFPSO</p>
+  </div>
+</section>
+
+<!-- JUEGO -->
+<section id="game" class="screen" hidden>
+  <header class="top">
+    <div class="topin">
+      <div class="lives" id="lives" aria-label="Vidas"></div>
+      <div class="stat timer" id="timerBox"><small>Tiempo</small><b id="timer">10:00</b></div>
+      <div class="stat"><small>Puntos</small><b id="points">0</b></div>
+      <div class="stat"><small>Palabras</small><b id="progress">0/14</b></div>
+      <div class="spacer"></div>
+      <div class="who" id="who"></div>
+    </div>
+  </header>
+  <main class="layout">
+    <div class="board">
+      <div class="grid" id="grid" aria-hidden="true"></div>
+    </div>
+    <div class="right">
+      <div class="panel" id="panel">
+        <div class="clabel"><span class="tag" id="ctag">1 H</span><span id="clen"></span></div>
+        <p class="ctext" id="ctext"></p>
+        <form class="arow" id="answerForm" autocomplete="off">
+          <input class="inp" id="answer" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Escribe la palabra" aria-label="Respuesta">
+          <button class="btn" type="submit">Comprobar</button>
+        </form>
+        <div class="acts">
+          <button class="btn ghost" type="button" id="prevBtn" aria-label="Pista anterior">‹</button>
+          <button class="btn ghost" type="button" id="nextBtn" aria-label="Siguiente pista">›</button>
+          <button class="btn ghost" type="button" id="hintBtn">Pista (−25)</button>
+          <div class="msg" id="msg" role="status"></div>
+        </div>
+      </div>
+    <aside class="side">
+      <h3>Horizontales</h3><ul class="clues" id="cluesH"></ul>
+      <h3>Verticales</h3><ul class="clues" id="cluesV"></ul>
+      <button class="btn ghost" type="button" id="quitBtn" style="font-size:.8rem;padding:8px 12px">Terminar y enviar puntaje</button>
+    </aside>
+    </div>
+  </main>
+</section>
+
+<!-- FINAL -->
+<section id="end" class="screen" hidden>
+  <div class="end">
+    <div class="kicker" id="endKicker">Fin del juego</div>
+    <h2 id="endTitle">¡Completaste el crucigrama!</h2>
+    <div class="big" id="endScore">0</div>
+    <div style="color:var(--muted);font-size:.85rem">puntos</div>
+    <div class="breakdown">
+      <div><b id="bWords">0</b><small>Palabras</small></div>
+      <div><b id="bLives">0</b><small>Vidas</small></div>
+      <div><b id="bTime">0:00</b><small>Tiempo</small></div>
+    </div>
+    <div class="rankbox" id="rankBox">Enviando tu puntaje al ranking…</div>
+    <div class="endbtns">
+      <a class="btn dark" href="ranking.html" style="text-decoration:none">Ver ranking</a>
+      <button class="btn ghost" type="button" id="retryBtn" hidden>Reintentar envío</button>
+      <button class="btn ghost" type="button" id="againBtn">Jugar otra vez (práctica)</button>
+    </div>
+  </div>
+</section>
+
+<script>
+const DATA = {"rows": 17, "cols": 15, "words": [{"n": 1, "dir": "H", "row": 0, "col": 4, "answer": "PRISIONERO", "clue": "En ECVP, quiere estar en otro lugar y asiste solo porque es obligatorio."}, {"n": 7, "dir": "H", "row": 4, "col": 8, "answer": "MOTORES", "clue": "En el Speed Boat, lo que ayuda a la lancha a llegar a la isla."}, {"n": 9, "dir": "H", "row": 7, "col": 4, "answer": "RECHAZADOS", "clue": "Entregables que no cumplen los criterios de aceptación; sus historias vuelven al backlog."}, {"n": 10, "dir": "H", "row": 9, "col": 4, "answer": "SECRETARIO", "clue": "Integrante del equipo que documenta las discusiones de la retrospectiva."}, {"n": 11, "dir": "H", "row": 11, "col": 0, "answer": "STAKEHOLDERS", "clue": "Participan en la reunión de revisión junto al equipo principal de Scrum."}, {"n": 12, "dir": "H", "row": 14, "col": 4, "answer": "INSPECCION", "clue": "La retrospectiva es parte del ciclo de ___-adaptación de Scrum."}, {"n": 13, "dir": "H", "row": 16, "col": 1, "answer": "ISLA", "clue": "En el Speed Boat, simboliza la visión del proyecto."}, {"n": 14, "dir": "H", "row": 16, "col": 6, "answer": "ACEPTADOS", "clue": "Entregables que cumplen los criterios de aceptación. Es la salida obligatoria del proceso 11.1."}, {"n": 2, "dir": "V", "row": 0, "col": 11, "answer": "EXPLORADOR", "clue": "En ECVP, quiere participar y aprender todo lo que se discute."}, {"n": 3, "dir": "V", "row": 3, "col": 13, "answer": "REVISION", "clue": "Reunión de ___ del sprint: herramienta obligatoria de Demostrar y validar el sprint."}, {"n": 4, "dir": "V", "row": 4, "col": 0, "answer": "SCRUMMASTER", "clue": "Rol que organiza y modera la reunión de retrospectiva (sin espacio)."}, {"n": 5, "dir": "V", "row": 4, "col": 2, "answer": "SPEEDBOAT", "clue": "Técnica de retrospectiva en la que el equipo es la tripulación de una lancha (en inglés, sin espacio)."}, {"n": 6, "dir": "V", "row": 4, "col": 4, "answer": "RETROSPECTIVA", "clue": "Proceso 11.2: el Scrum Master y el Equipo Scrum discuten las lecciones aprendidas del sprint."}, {"n": 8, "dir": "V", "row": 5, "col": 6, "answer": "VACACIONISTA", "clue": "En ECVP, quiere relajarse y ser turista en la retrospectiva."}]};
+const CFG = { lives: 3, seconds: 600, wordPts: 100, hintCost: 25, minWord: 25, lifeBonus: 50 };
+const STORE = 'sbok11-crucigrama-v1';
+const $ = s => document.querySelector(s);
+const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } },
+  set(v) { try { localStorage.setItem(STORE, JSON.stringify(v)); } catch {} }
+};
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+
+// ---------- modelo ----------
+const W = DATA.words.map((w, i) => {
+  const cells = [];
+  for (let k = 0; k < w.answer.length; k++) {
+    const r = w.row + (w.dir === 'V' ? k : 0), c = w.col + (w.dir === 'H' ? k : 0);
+    cells.push(r + ',' + c);
+  }
+  return { ...w, i, cells };
+});
+const CELLS = {};
+W.forEach(w => w.cells.forEach((key, k) => {
+  CELLS[key] = CELLS[key] || { letter: w.answer[k], words: [], num: null };
+  CELLS[key].words.push(w.i);
+  if (k === 0) CELLS[key].num = w.n;
+}));
+const ORDER = [...W.filter(w => w.dir === 'H'), ...W.filter(w => w.dir === 'V')].map(w => w.i);
+const TOTAL = W.length;
+
+let S = null;          // estado de la partida
+let sel = ORDER[0];    // palabra seleccionada
+let tick = null;
+
+const persistent = store.get();   // {id, name, first: {...}, game: {...}}
+if (!persistent.id) { persistent.id = uid(); store.set(persistent); }
+
+function save() { persistent.game = S; store.set(persistent); }
+
+// ---------- vidas ----------
+const heartSVG = '<svg class="heart" viewBox="0 0 24 24"><path fill="#C00000" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.3h2c.7-1.2 2.2-2.3 4.3-2.3 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>';
+function renderLives() {
+  $('#lives').innerHTML = Array.from({ length: CFG.lives }, (_, k) => heartSVG.replace('class="heart"', 'class="heart' + (k >= S.lives ? ' lost' : '') + '"')).join('');
+}
+
+// ---------- cuadrícula ----------
+function buildGrid() {
+  const g = $('#grid');
+  document.documentElement.style.setProperty('--cols', DATA.cols);
+  document.documentElement.style.setProperty('--rows', DATA.rows);
+  g.innerHTML = '';
+  for (let r = 0; r < DATA.rows; r++) for (let c = 0; c < DATA.cols; c++) {
+    const key = r + ',' + c, info = CELLS[key];
+    const d = document.createElement('div');
+    d.className = 'cell' + (info ? ' on' : '');
+    if (info) {
+      d.dataset.key = key;
+      if (info.num) { const n = document.createElement('span'); n.className = 'num'; n.textContent = info.num; d.appendChild(n); }
+      const ch = document.createElement('span'); ch.className = 'ch'; d.appendChild(ch);
+      d.addEventListener('click', () => onCell(key));
+    }
+    g.appendChild(d);
+  }
+}
+function solvedCells() { const s = new Set(); S.solved.forEach(i => W[i].cells.forEach(k => s.add(k))); return s; }
+function renderGrid() {
+  const solved = solvedCells(), revealed = new Set(S.revealed);
+  const typed = norm($('#answer').value);
+  const w = W[sel];
+  document.querySelectorAll('.cell.on').forEach(el => {
+    const key = el.dataset.key, info = CELLS[key], ch = el.firstElementChild.classList.contains('ch') ? el.firstElementChild : el.lastElementChild;
+    const inSel = w.cells.includes(key);
+    el.classList.toggle('sel', inSel);
+    el.classList.toggle('solved', solved.has(key));
+    let txt = '', cls = 'ch';
+    if (solved.has(key)) txt = info.letter;
+    else if (inSel && typed[w.cells.indexOf(key)]) { txt = typed[w.cells.indexOf(key)]; cls += ' typing'; }
+    else if (revealed.has(key)) { txt = info.letter; cls += ' hint'; }
+    ch.textContent = txt; ch.className = cls;
+  });
+}
+function onCell(key) {
+  const ws = CELLS[key].words;
+  let next = ws[0];
+  if (ws.length > 1 && ws.includes(sel)) next = ws.find(i => i !== sel);
+  else if (ws.length > 1) next = ws.find(i => !S.solved.includes(i)) ?? ws[0];
+  select(next, true);
+}
+
+// ---------- pistas (lista) ----------
+function buildClues() {
+  for (const dir of ['H', 'V']) {
+    const ul = $('#clues' + dir); ul.innerHTML = '';
+    W.filter(w => w.dir === dir).forEach(w => {
+      const li = document.createElement('li'), b = document.createElement('button');
+      b.type = 'button'; b.dataset.i = w.i;
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = w.n;
+      const t = document.createElement('span'); t.textContent = w.clue;
+      const l = document.createElement('span'); l.className = 'len'; l.textContent = w.answer.length;
+      b.append(n, t, l); b.addEventListener('click', () => select(w.i, true));
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+}
+function renderClues() {
+  document.querySelectorAll('.clues button').forEach(b => {
+    const i = +b.dataset.i;
+    b.classList.toggle('active', i === sel);
+    b.classList.toggle('done', S.solved.includes(i));
+  });
+}
+
+// ---------- selección ----------
+function select(i, focus) {
+  sel = i; const w = W[i];
+  $('#ctag').textContent = w.n + (w.dir === 'H' ? ' Horizontal' : ' Vertical');
+  const val = Math.max(CFG.minWord, CFG.wordPts - CFG.hintCost * (S.hints[i] || 0));
+  $('#clen').textContent = w.answer.length + ' letras' + (S.solved.includes(i) ? ' · resuelta' : ' · vale ' + val);
+  $('#ctext').textContent = w.clue;
+  $('#answer').value = S.solved.includes(i) ? w.answer : '';
+  $('#answer').maxLength = w.answer.length + 4;
+  $('#answer').disabled = S.solved.includes(i);
+  $('#hintBtn').disabled = S.solved.includes(i);
+  setMsg('');
+  renderGrid(); renderClues();
+  if (focus && !S.solved.includes(i) && window.matchMedia('(pointer:fine)').matches) $('#answer').focus();
+}
+function step(d) {
+  const pos = ORDER.indexOf(sel);
+  for (let k = 1; k <= ORDER.length; k++) {
+    const i = ORDER[(pos + d * k + ORDER.length * 2) % ORDER.length];
+    if (!S.solved.includes(i)) return select(i, true);
+  }
+}
+function setMsg(t, kind) { const m = $('#msg'); m.textContent = t; m.className = 'msg' + (kind ? ' ' + kind : ''); }
+
+// ---------- jugar ----------
+function check(e) {
+  e.preventDefault();
+  if (!S || S.over || S.solved.includes(sel)) return;
+  const w = W[sel], guess = norm($('#answer').value);
+  if (!guess) return;
+  if (guess.length !== w.answer.length) { setMsg('Debe tener ' + w.answer.length + ' letras', 'bad'); return; }
+  if (guess === w.answer) {
+    const pts = Math.max(CFG.minWord, CFG.wordPts - CFG.hintCost * (S.hints[sel] || 0));
+    S.solved.push(sel); S.points += pts; save();
+    w.cells.forEach(k => { const el = document.querySelector('[data-key="' + k + '"]'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); });
+    updateTop();
+    if (S.solved.length === TOTAL) return finish('done');
+    setMsg('¡Correcto! +' + pts, 'good');
+    const keep = $('#msg').textContent;
+    step(1); setMsg(keep, 'good');
+  } else {
+    S.lives -= 1; save(); renderLives();
+    $('#answer').value = ''; renderGrid();
+    const p = $('#panel'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake');
+    if (navigator.vibrate) navigator.vibrate(120);
+    if (S.lives <= 0) return finish('lives');
+    setMsg('Incorrecto · −1 vida', 'bad');
+  }
+}
+function hint() {
+  if (!S || S.over || S.solved.includes(sel)) return;
+  const w = W[sel], known = solvedCells(), rev = new Set(S.revealed);
+  const hidden = w.cells.filter(k => !known.has(k) && !rev.has(k));
+  if (hidden.length <= 1) { setMsg('Ya casi la tienes: sin más pistas', 'bad'); return; }
+  if (Math.max(CFG.minWord, CFG.wordPts - CFG.hintCost * (S.hints[sel] || 0)) <= CFG.minWord) { setMsg('No quedan pistas para esta palabra', 'bad'); return; }
+  S.revealed.push(hidden[Math.floor(Math.random() * hidden.length)]);
+  S.hints[sel] = (S.hints[sel] || 0) + 1; save();
+  select(sel, true); setMsg('Pista usada · −' + CFG.hintCost);
+}
+function remaining() { return Math.max(0, CFG.seconds - Math.floor((Date.now() - S.startedAt) / 1000)); }
+const fmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+function updateTop() {
+  const r = remaining();
+  $('#timer').textContent = fmt(r);
+  $('#timerBox').classList.toggle('warn', r <= 60);
+  $('#points').textContent = S.points;
+  $('#progress').textContent = S.solved.length + '/' + TOTAL;
+}
+function loop() { updateTop(); if (remaining() <= 0 && !S.over) finish('time'); }
+
+function startGame(name) {
+  S = { name, startedAt: Date.now(), lives: CFG.lives, solved: [], hints: {}, revealed: [], points: 0, over: false, practice: !!persistent.first };
+  persistent.name = name; save();
+  enterGame();
+}
+function enterGame() {
+  $('#start').hidden = true; $('#end').hidden = true; $('#game').hidden = false;
+  $('#who').textContent = S.name + (S.practice ? ' · práctica' : '');
+  buildGrid(); buildClues(); renderLives();
+  select(ORDER.find(i => !S.solved.includes(i)) ?? ORDER[0], true);
+  updateTop(); clearInterval(tick); tick = setInterval(loop, 250); loop();
+}
+
+function finish(reason) {
+  if (S.over) return;
+  clearInterval(tick);
+  const left = remaining();
+  const all = S.solved.length === TOTAL;
+  const bonus = all ? S.lives * CFG.lifeBonus + Math.floor(left / 2) : 0;
+  S.over = true; S.reason = reason; S.bonus = bonus; S.score = S.points + bonus;
+  S.timeMs = Math.min(CFG.seconds * 1000, Date.now() - S.startedAt);
+  if (!S.practice && !persistent.first) persistent.first = { score: S.score, solved: S.solved.length, lives: S.lives, timeMs: S.timeMs, name: S.name, sent: false };
+  save();
+  showEnd();
+}
+function showEnd() {
+  $('#start').hidden = true; $('#game').hidden = true; $('#end').hidden = false;
+  const titles = { done: '¡Completaste el crucigrama!', lives: 'Te quedaste sin vidas', time: 'Se acabó el tiempo', quit: 'Partida terminada' };
+  $('#endTitle').textContent = titles[S.reason] || titles.quit;
+  $('#endKicker').textContent = S.practice ? 'Partida de práctica · no cuenta para el ranking' : 'Resultado de ' + S.name;
+  $('#endScore').textContent = S.score;
+  $('#bWords').textContent = S.solved.length + '/' + TOTAL;
+  $('#bLives').textContent = S.lives;
+  $('#bTime').textContent = fmt(Math.round(S.timeMs / 1000));
+  if (S.practice) {
+    const f = persistent.first;
+    $('#rankBox').className = 'rankbox';
+    $('#rankBox').textContent = f ? 'Tu puntaje oficial sigue siendo ' + f.score + ' (primer intento).' : '';
+  } else sendScore();
+}
+
+async function sendScore() {
+  const f = persistent.first, box = $('#rankBox');
+  if (!f) return;
+  box.className = 'rankbox'; box.textContent = 'Enviando tu puntaje al ranking…'; $('#retryBtn').hidden = true;
+  try {
+    const res = await fetch('/api/ranking', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: persistent.id, name: f.name, score: f.score, solved: f.solved, lives: f.lives, timeMs: f.timeMs }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    f.sent = true; store.set(persistent);
+    box.className = 'rankbox ok';
+    box.textContent = data.rank ? 'Vas en el puesto #' + data.rank + ' de ' + data.total + '. ¡Mira el ranking en pantalla!' : 'Puntaje registrado.';
+  } catch (err) {
+    box.className = 'rankbox';
+    box.textContent = 'No se pudo conectar con el ranking. Muestra esta pantalla a los expositores.';
+    $('#retryBtn').hidden = false;
+  }
+}
+
+// ---------- eventos ----------
+$('#startForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#name').value.replace(/\s+/g, ' ').trim().slice(0, 20);
+  if (name.length < 2) { $('#name').focus(); return; }
+  startGame(name);
+});
+$('#answerForm').addEventListener('submit', check);
+$('#answer').addEventListener('input', () => renderGrid());
+$('#hintBtn').addEventListener('click', hint);
+$('#prevBtn').addEventListener('click', () => step(-1));
+$('#nextBtn').addEventListener('click', () => step(1));
+$('#quitBtn').addEventListener('click', () => { if (S && !S.over) finish('quit'); });
+$('#retryBtn').addEventListener('click', sendScore);
+$('#againBtn').addEventListener('click', () => {
+  $('#end').hidden = true; $('#start').hidden = false;
+  $('#name').value = persistent.name || '';
+  $('#resumeNote').hidden = false;
+  $('#resumeNote').textContent = 'Esta partida será de práctica: en el ranking ya cuenta tu primer intento.';
+});
+
+// ---------- arranque (retoma la partida si se recargó la página) ----------
+(function boot() {
+  if (persistent.name) $('#name').value = persistent.name;
+  const g = persistent.game;
+  if (g && !g.over) { S = g; enterGame(); return; }
+  if (g && g.over) { S = g; showEnd(); return; }
+})();
+</script>
+</body>
+</html>

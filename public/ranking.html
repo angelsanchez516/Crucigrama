@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ranking · Crucigrama SBOK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<style>
+:root{--red:#C00000;--red-d:#800000;--ink:#1d1f1c;--muted:#62656b;--soft:#f4f4f5;--line:#e3e3e6;--gold:#e0a400}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit;cursor:pointer}
+[hidden]{display:none!important}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 32px;display:grid;grid-template-columns:340px 1fr;gap:36px;min-height:100dvh}
+@media (max-width:860px){
+  .wrap{grid-template-columns:minmax(0,1fr);padding:20px 16px;gap:18px;min-height:0}
+  h1{font-size:1.9rem}
+  .qrcard,.reveal,.admin{display:none!important}
+  .podium{gap:8px}
+  .pod{min-height:118px;padding:12px 8px;border-radius:16px}
+  .pod.p1{min-height:146px}
+  .pod .nm{font-size:1rem}
+  .pod .sc{font-size:1.5rem}
+  .pod .medal{font-size:.66rem}
+  td{font-size:.95rem;padding:10px 6px}
+  th{padding:8px 6px}
+  td.n{max-width:150px}
+}
+@media (max-width:560px){.opt{display:none}}
+.left{display:flex;flex-direction:column;gap:18px}
+.kicker{color:var(--red);font-weight:700;letter-spacing:.14em;font-size:.8rem;text-transform:uppercase}
+h1{font-size:2.4rem;line-height:1.05;margin:.2em 0 0;font-weight:800;font-style:italic}
+.qrcard{background:var(--red);color:#fff;border-radius:22px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.qrcard .q{background:#fff;color:var(--ink);padding:12px;border-radius:14px;width:236px;height:236px;display:grid;place-items:center;font-weight:600;word-break:break-all;text-align:center}
+.qrcard .q img,.qrcard .q canvas{display:block;width:212px!important;height:212px!important}
+.qrcard b{font-size:1.15rem}
+.url{font-size:.85rem;word-break:break-all;opacity:.95}
+.count{display:flex;gap:12px}
+.count div{flex:1;background:var(--soft);border-radius:16px;padding:12px}
+.count b{display:block;font-size:1.7rem;line-height:1}
+.count small{color:var(--muted);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;display:block;margin-top:4px;line-height:1.3}
+.reveal{background:var(--ink);color:#fff;border:0;border-radius:14px;padding:16px;font-weight:700;font-size:1.05rem}
+.admin{font-size:.78rem;color:var(--muted)}
+.admin summary{cursor:pointer}
+.admin form{display:flex;gap:8px;margin-top:8px}
+.admin input{flex:1;min-width:0;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.admin button{border:0;border-radius:10px;padding:8px 12px;background:var(--soft)}
+.right h2{margin:6px 0 14px;font-size:1.1rem;text-transform:uppercase;letter-spacing:.14em;color:var(--red)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);margin-left:10px;letter-spacing:.05em;text-transform:none}
+.dot{width:8px;height:8px;border-radius:50%;background:#2fa35a;animation:pulse 1.6s infinite}
+.dot.off{background:#c3c3c8;animation:none}
+@keyframes pulse{50%{opacity:.3}}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;align-items:end;margin-bottom:22px}
+.pod{border-radius:20px;padding:16px 14px;text-align:center;background:var(--soft);min-height:150px;display:flex;flex-direction:column;justify-content:flex-end}
+.pod.p1{background:var(--red);color:#fff;min-height:190px}
+.pod .medal{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.pod .nm{font-weight:700;font-size:1.25rem;margin:4px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .sc{font-size:2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.pod.empty{opacity:.45}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tablewrap{border-radius:12px}
+@media (min-width:861px){.tablewrap{max-height:calc(100dvh - 330px);overflow:auto}}
+thead th{position:sticky;top:0;background:#fff;z-index:1}
+tr.me td{background:#fff3c4}
+.youtag{font-size:.72rem;font-weight:700;color:var(--red-d);margin-left:6px}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line);font-size:1.05rem}
+td.r{font-weight:700;color:var(--red);width:52px}
+td.n{font-weight:600;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.s{font-weight:800}
+th.num,td.num{text-align:right}
+tr.new td{animation:hl 2s}
+@keyframes hl{0%{background:#ffe1e1}100%{background:transparent}}
+.empty-msg{color:var(--muted);padding:30px 10px;text-align:center}
+.overlay{position:fixed;inset:0;background:rgba(20,20,20,.88);display:grid;place-items:center;z-index:20}
+.winner{text-align:center;color:#fff;padding:24px}
+.winner .crown{font-size:1rem;letter-spacing:.3em;text-transform:uppercase;color:#ffd24d;font-weight:700}
+.winner .wn{font-size:clamp(2.6rem,8vw,5.5rem);font-weight:800;font-style:italic;line-height:1.05;margin:.2em 0}
+.winner .ws{font-size:1.4rem;opacity:.9}
+.winner button{margin-top:28px;background:#fff;color:var(--ink);border:0;border-radius:12px;padding:12px 20px;font-weight:600}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="left">
+    <div>
+      <div class="kicker">Guía SBOK™ · Cap. 11</div>
+      <h1>Ranking del crucigrama</h1>
+    </div>
+    <div class="qrcard">
+      <b>Escanea para jugar</b>
+      <div class="q" id="qr"></div>
+      <div class="url" id="url"></div>
+    </div>
+    <div class="count">
+      <div><b id="nPlayers">0</b><small>Jugadores</small></div>
+      <div><b id="nPerfect">0</b><small>Completaron todo</small></div>
+      <div><b id="nAvg">0</b><small>Promedio del salón</small></div>
+    </div>
+    <button class="reveal" id="revealBtn" type="button">🏆 Revelar ganador</button>
+    <details class="admin">
+      <summary>Opciones de los expositores</summary>
+      <form id="resetForm">
+        <input id="pin" type="password" placeholder="PIN para reiniciar" autocomplete="off">
+        <button type="submit">Reiniciar ranking</button>
+      </form>
+      <div id="adminMsg" style="margin-top:6px"></div>
+    </details>
+  </section>
+  <section class="right">
+    <h2>Todos los jugadores <span class="live"><span class="dot" id="dot"></span><span id="liveTxt">en vivo</span></span></h2>
+    <div class="podium" id="podium"></div>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>Nombre</th><th class="num">Puntos</th><th class="num">Palabras</th><th class="num opt">Vidas</th><th class="num opt">Tiempo</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    </div>
+    <div class="empty-msg" id="emptyMsg">Todavía no hay puntajes. ¡Escaneen el código y a jugar!</div>
+  </section>
+</div>
+<div class="overlay" id="overlay" hidden>
+  <div class="winner">
+    <div class="crown">Ganador</div>
+    <div class="wn" id="wName"></div>
+    <div class="ws" id="wScore"></div>
+    <button type="button" id="closeWin">Cerrar</button>
+  </div>
+</div>
+<canvas id="confetti" hidden></canvas>
+<script>
+const TOTAL = 14;
+const $ = s => document.querySelector(s);
+const fmt = ms => { const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const gameUrl = location.origin + location.pathname.replace(/ranking\.html$/, '');
+$('#url').textContent = gameUrl.replace(/^https?:\/\//, '');
+
+// QR: primero la librería (cdnjs); si no carga, una imagen de api.qrserver.com; si tampoco, queda la URL escrita.
+let qrDone = false;
+function drawQR() {
+  if (qrDone) return;
+  const box = $('#qr');
+  if (window.QRCode) {
+    box.innerHTML = ''; qrDone = true;
+    new QRCode(box, { text: gameUrl, width: 212, height: 212, colorDark: '#1d1f1c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    return;
+  }
+  const img = new Image(212, 212);
+  img.alt = 'Código QR para abrir el juego';
+  img.onload = () => { box.innerHTML = ''; box.appendChild(img); qrDone = true; };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=424x424&margin=0&data=' + encodeURIComponent(gameUrl);
+}
+$('#qr').textContent = gameUrl;
+window.addEventListener('load', drawQR);
+setTimeout(drawQR, 2500);
+
+let players = [], seen = new Set(), firstLoad = true;
+// Si este navegador jugó, se resalta su fila (mismo sitio = mismo almacenamiento local).
+let myId = null; try { myId = (JSON.parse(localStorage.getItem('sbok11-crucigrama-v1')) || {}).id || null; } catch {}
+function cell(tr, txt, cls) { const td = document.createElement('td'); td.textContent = txt; if (cls) td.className = cls; tr.appendChild(td); }
+function render() {
+  $('#nPlayers').textContent = players.length;
+  $('#nPerfect').textContent = players.filter(p => p.solved === TOTAL).length;
+  $('#nAvg').textContent = players.length ? Math.round(players.reduce((a, p) => a + p.score, 0) / players.length) : 0;
+  const pod = $('#podium'); pod.innerHTML = '';
+  [[1, 'p2', '2.º lugar'], [0, 'p1', '1.er lugar'], [2, 'p3', '3.er lugar']].forEach(([idx, cls, label]) => {
+    const p = players[idx], d = document.createElement('div');
+    d.className = 'pod ' + cls + (p ? '' : ' empty');
+    const m = document.createElement('div'); m.className = 'medal'; m.textContent = label;
+    const n = document.createElement('div'); n.className = 'nm'; n.textContent = p ? p.name : '—';
+    const s = document.createElement('div'); s.className = 'sc'; s.textContent = p ? p.score : '';
+    d.append(m, n, s); pod.appendChild(d);
+  });
+  const tb = $('#rows'); tb.innerHTML = '';
+  players.forEach((p, k) => {
+    const tr = document.createElement('tr');
+    if (!firstLoad && !seen.has(p.id)) tr.className = 'new';
+    if (p.id === myId) tr.classList.add('me');
+    cell(tr, k + 1, 'r'); cell(tr, p.name, 'n');
+    if (p.id === myId) { const t = document.createElement('span'); t.className = 'youtag'; t.textContent = '(tú)'; tr.lastChild.appendChild(t); } cell(tr, p.score, 's num'); cell(tr, p.solved + '/' + TOTAL, 'num'); cell(tr, p.lives, 'num opt'); cell(tr, fmt(p.timeMs), 'num opt');
+    tb.appendChild(tr);
+  });
+  // En el celular de un jugador, la primera vez se desplaza hasta su fila.
+  if (firstLoad && myId && innerWidth <= 860) { const me = tb.querySelector('tr.me'); if (me) setTimeout(() => me.scrollIntoView({ block: 'center' }), 100); }
+  players.forEach(p => seen.add(p.id)); firstLoad = false;
+  $('#emptyMsg').hidden = players.length > 0;
+}
+async function refresh() {
+  try {
+    const res = await fetch('/api/ranking', { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    players = data.players || [];
+    render();
+    $('#dot').classList.remove('off'); $('#liveTxt').textContent = 'en vivo';
+  } catch {
+    $('#dot').classList.add('off'); $('#liveTxt').textContent = 'sin conexión con el ranking';
+  }
+}
+refresh(); setInterval(refresh, 3000);
+
+// ---------- ganador + confeti ----------
+$('#revealBtn').addEventListener('click', async () => {
+  await refresh();
+  const w = players[0];
+  $('#wName').textContent = w ? w.name : 'Aún no hay jugadores';
+  $('#wScore').textContent = w ? w.score + ' puntos · ' + w.solved + '/' + TOTAL + ' palabras · ' + fmt(w.timeMs) : '';
+  $('#overlay').hidden = false;
+  if (w) confetti();
+});
+$('#closeWin').addEventListener('click', () => { $('#overlay').hidden = true; });
+
+function confetti() {
+  const cv = $('#confetti'), ctx = cv.getContext('2d');
+  cv.hidden = false; cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ['#C00000', '#ffffff', '#ffd24d', '#800000', '#f4f4f5'];
+  const parts = Array.from({ length: 220 }, () => ({
+    x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .6,
+    w: 6 + Math.random() * 8, h: 8 + Math.random() * 10, vy: 2 + Math.random() * 4, vx: -2 + Math.random() * 4,
+    a: Math.random() * Math.PI, va: -.2 + Math.random() * .4, c: colors[Math.floor(Math.random() * colors.length)]
+  }));
+  const end = performance.now() + 5000;
+  (function frame(t) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    parts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.a += p.va;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+    });
+    if (t < end) requestAnimationFrame(frame); else { ctx.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; }
+  })(performance.now());
+}
+
+// ---------- reinicio ----------
+$('#resetForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = $('#adminMsg');
+  try {
+    const res = await fetch('/api/ranking', { method: 'DELETE', headers: { 'x-admin-pin': $('#pin').value } });
+    if (res.status === 403) { msg.textContent = 'PIN incorrecto.'; return; }
+    if (!res.ok) throw new Error(res.status);
+    msg.textContent = 'Ranking reiniciado.'; $('#pin').value = ''; seen = new Set(); firstLoad = true; refresh();
+  } catch { msg.textContent = 'No se pudo reiniciar (sin conexión).'; }
+});
+</script>
+</body>
+</html>
